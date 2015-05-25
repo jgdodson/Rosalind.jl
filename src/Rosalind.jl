@@ -32,22 +32,25 @@ function isRNAString(seq::String)
   all(b -> b in bases, seq)
 end
 
+function alphabet(dna::DNASeq)
+  ['A', 'C', 'G', 'T']
+end
 
-# Frequency counts for the bases in a DNA sequence.
-function countBasesDNA(dna::DNASeq)
+function alphabet(rna::RNASeq)
+  ['A', 'C', 'G', 'U']
+end
+
+# Frequency counts for the bases in a genetic sequence.
+function countBases(gen::GenSeq)
 
   counts::Array{Int64, 1} = zeros(4)
 
-  for c in dna.seq
-    if c == 'A'
-      counts[1] += 1
-    elseif c == 'C'
-      counts[2] += 1
-    elseif c == 'G'
-      counts[3] += 1
-    else
-      counts[4] += 1
-    end
+  alpha = alphabet(gen)
+
+  indices = [ alpha[i]=>i for i=1:Base.length(alpha) ]
+
+  for c in gen.seq
+    counts[indices[c]] += 1
   end
 
   counts
@@ -79,8 +82,8 @@ function complement(rna::RNASeq)
   RNASeq(map((ch) -> complements[ch], rna.seq))
 end
 
-function length(seq::GenSeq)
-  Base.length(seq.seq)
+function length(gen::GenSeq)
+  Base.length(gen.seq)
 end
 
 # Related problem - http://rosalind.info/problems/revc
@@ -127,14 +130,20 @@ function findMotif(seq::String, motif::String)
 
 end
 
-function loadDNASeq(filename :: String)
+function loadText(filename::String)
 
   # read text from file
   raw = open(readall, filename)
 
-  clean = replace(strip(raw), r"\n|\r", "")
+  replace(strip(raw), r"\n|\r", "")
+end
 
-  DNASeq(clean)
+function loadDNASeq(filename::String)
+  DNASeq(loadText(filename))
+end
+
+function loadRNASeq(filename::String)
+  RNASeq(loadText(filename))
 end
 
 function linesFromFile(filename::String)

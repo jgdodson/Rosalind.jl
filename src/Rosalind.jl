@@ -1,49 +1,109 @@
 module Rosalind
 
 # (✓) Create abstract type for genetic sequence
-# ( ) Add concrete protein sequence type
+# (✓) Add concrete protein sequence type
+# ( ) Finish working on toProteinString
 
-abstract GenSeq
+abstract GeneticString
+
+const DNAChars = ['A', 'C', 'G', 'T']
+const RNAChars = ['A', 'C', 'G', 'U']
+const ProteinChars = ['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y']
+const RNACodonTable = ["UUU" => "F", "CUU" => "L", "AUU" => "I",
+                       "GUU" => "V", "UUC" => "F", "CUC" => "L",
+                       "AUC" => "I", "GUC" => "V", "UUA" => "L",
+                       "CUA" => "L", "AUA" => "I", "GUA" => "V",
+                       "UUG" => "L", "CUG" => "L", "AUG" => "M",
+                       "GUG" => "V", "UCU" => "S", "CCU" => "P",
+                       "ACU" => "T",
+                       "GCU" => "A",
+                       "UCC" => "S",
+                       "CCC" => "P",
+                       "ACC" => "T",
+                       "GCC" => "A",
+                       "UCA" => "S",
+                       "CCA" => "P",
+                       "ACA" => "T",
+                       "GCA" => "A",
+                       "UCG" => "S",
+                       "CCG" => "P",
+                       "ACG" => "T",
+                       "GCG" => "A",
+      "UAU" => "Y",
+      "CAU" => "H",
+      "AAU" => "N",
+      "GAU" => "D",
+      "UAC" => "Y",
+      "CAC" => "H",
+      "AAC" => "N",
+      "GAC" => "D",
+      "UAA" => 'X',
+      "CAA" => "Q",
+      "AAA" => "K",
+      "GAA" => "E",
+      "UAG" => "Stop",
+      "CAG" => "Q",
+      "AAG" => "K",
+      "GAG" => "E",
+      "UGU" => "C",
+      "CGU" => "R",
+      "AGU" => "S",
+      "GGU" => "G",
+      "UGC" => "C",
+      "CGC" => "R",
+      "AGC" => "S",
+      "GGC" => "G",
+      "UGA" => "Stop",
+      "CGA" => "R",
+      "AGA" => "R",
+      "GGA" => "G",
+      "UGG" => "W",
+      "CGG" => "R",
+      "AGG" => "R",
+      "GGG" => "G"]
 
 
-immutable DNASeq <: GenSeq
+immutable DNAString <: GeneticString
   seq::String
 
-  DNASeq(seq) = isDNAString(seq) ? new(seq) : error("String contains non-ACTG character.")
+  bases = Set(DNAChars)
+  DNAString(seq) = fromAlphabet(bases, seq) ? new(seq) : error("String contains non-ACTG character.")
 end
 
-immutable RNASeq <: GenSeq
+immutable RNAString <: GeneticString
   seq::String
 
-  RNASeq(seq) = isRNAString(seq) ? new(seq) : error("String contains non-ACGU character.")
+  bases = Set(RNAChars)
+  RNAString(seq) = fromAlphabet(bases, seq) ? new(seq) : error("String contains non-ACGU character.")
 end
 
-function isDNAString(seq::String)
+immutable ProteinString <: GeneticString
+  seq::String
 
-  bases = ['A','C','G','T']
-
-  all(b -> b in bases, seq)
+  aminos = Set(ProteinChars)
+  ProteinString(seq) = fromAlphabet(aminos, seq) ? new(seq) : error("String contains invalid amino acid character")
 end
 
-function isRNAString(seq::String)
-
-  bases = ['A','C','G','U']
-
-  all(b -> b in bases, seq)
+function fromAlphabet(alphabet::Set{Char}, seq::String)
+  all(b -> b in alphabet, seq)
 end
 
-function alphabet(dna::DNASeq)
-  ['A', 'C', 'G', 'T']
+function alphabet(dna::DNAString)
+  DNAChars
 end
 
-function alphabet(rna::RNASeq)
-  ['A', 'C', 'G', 'U']
+function alphabet(rna::RNAString)
+  RNAChars
+end
+
+function alphabet(protein::ProteinString)
+  ProteinChars
 end
 
 # Frequency counts for the bases in a genetic sequence.
-function countBases(gen::GenSeq)
+function countChars(gen::GeneticString)
 
-  counts::Array{Int64, 1} = zeros(4)
+  counts::Array{Int64, 1} = zeros(alphabet(gen))
 
   alpha = alphabet(gen)
 
@@ -57,46 +117,72 @@ function countBases(gen::GenSeq)
 end
 
 # Related problem - http://rosalind.info/problems/rna
-function transcribe(dna::DNASeq)
-  RNASeq(replace(dna.seq, "T", "U"))
+function toRNAString(dna::DNAString)
+  RNAString(replace(dna.seq, "T", "U"))
+end
+
+function toDNAString(rna::RNAString)
+  DNAString(replace(rna.seq, "U", "T"))
+end
+
+function toProteinString(rna::RNAString)
+
+  res = String[]
+
+  for i = 1:3:length(rna)-2
+    push!(res,RNACodonTable[rna.seq[i:i+2]])
+  end
+  ProteinString(join(res))
 end
 
 # Related problem - http://rosalind.info/problems/revc
-function complement(dna::DNASeq)
+function complement(dna::DNAString)
 
   complements = ['A'=>'T',
                  'C'=>'G',
                  'G'=>'C',
                  'T'=>'A']
 
-  DNASeq(map((ch) -> complements[ch], dna.seq))
+  DNAString(map((ch) -> complements[ch], dna.seq))
 end
 
-function complement(rna::RNASeq)
+function complement(rna::RNAString)
 
   complements = ['A'=>'U',
                  'C'=>'G',
                  'G'=>'C',
                  'U'=>'A']
 
-  RNASeq(map((ch) -> complements[ch], rna.seq))
+  RNAString(map((ch) -> complements[ch], rna.seq))
 end
 
-function length(gen::GenSeq)
+function length(gen::GeneticString)
   Base.length(gen.seq)
 end
 
 # Related problem - http://rosalind.info/problems/revc
-function reverse(dna::DNASeq)
-  DNASeq(reverse(dna.seq))
+function reverse(dna::DNAString)
+  DNAString(reverse(dna.seq))
 end
 
-function reverse(rna::RNASeq)
-  RNASeq(reverse(rna.seq))
+function reverse(rna::RNAString)
+  RNAString(reverse(rna.seq))
+end
+
+function gcContent(dna::DNAString)
+
+  GC = ['G', 'C']
+
+  foldl((acc, b) ->
+        if b in GC
+          acc + 1
+        else
+          acc
+        end, 0.0, dna.seq) / length(dna)
 end
 
 # Related problem - http://rosalind.info/problems/hamm
-function hammingDistance(seq1::GenSeq, seq2::GenSeq)
+function hammingDistance(seq1::GeneticString, seq2::GeneticString)
 
   seq1Len = length(seq1)
   seq2Len = length(seq2)
@@ -138,12 +224,12 @@ function loadText(filename::String)
   replace(strip(raw), r"\n|\r", "")
 end
 
-function loadDNASeq(filename::String)
-  DNASeq(loadText(filename))
+function loadDNAString(filename::String)
+  DNAString(loadText(filename))
 end
 
-function loadRNASeq(filename::String)
-  RNASeq(loadText(filename))
+function loadRNAString(filename::String)
+  RNAString(loadText(filename))
 end
 
 function linesFromFile(filename::String)

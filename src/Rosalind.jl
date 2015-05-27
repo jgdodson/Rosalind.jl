@@ -4,7 +4,7 @@ import Base: length, reverse
 
 # (✓) Create abstract type for genetic sequence
 # (✓) Add concrete protein sequence type
-# ( ) Finish candidates function
+# (✓) Finish candidates function
 # ( ) Finish working on toProteinString
 # ( ) Compare speeds of direct iteration and foldl
 
@@ -136,6 +136,17 @@ function toProteinString(rna::RNAString)
   ProteinString(join(res))
 end
 
+function toProteinString(dna::DNAString)
+
+  res = String[]
+
+  for i = 1:3:length(dna)-2
+    push!(res,DNACodonTable[dna.seq[i:i+2]])
+  end
+  ProteinString(join(res))
+end
+
+
 # Related problem - http://rosalind.info/problems/revc
 function complement(dna::DNAString)
 
@@ -231,8 +242,30 @@ function findMotif(gen::GeneticString, motif::String)
 
 end
 
+# Related problem - http://rosalind.info/problems/orf
 function candidates(dna::DNAString)
 
+  startCodon = "ATG"
+  stopCodons = ["TAG", "TGA", "TAA"]
+
+  bins = [i=>String[] for i=0:2]
+  acc = String[]
+
+  for i=1:length(dna)-2
+    codon = dna.seq[i:i+2]
+    binNum = i % 3
+    if codon == startCodon
+      map!((b) -> string(b, DNACodonTable[codon]), bins[binNum])
+      push!(bins[binNum], DNACodonTable[startCodon])
+    elseif codon in stopCodons
+      append!(acc, bins[binNum])
+      bins[binNum] = String[]
+    else
+      map!((b) -> string(b, DNACodonTable[codon]), bins[binNum])
+    end
+  end
+
+  acc
 end
 
 function loadText(filename::String)

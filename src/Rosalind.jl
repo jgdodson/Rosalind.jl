@@ -1,10 +1,12 @@
 module Rosalind
 
-import Base: length, reverse
+import Base.length
+import Base.reverse
 
 # (✓) Create abstract type for genetic sequence
 # (✓) Add concrete protein sequence type
-# (✓) Finish candidates function
+# ( ) Finish candidates function
+# ( ) Remove inefficient repeated concatenation from candidates function
 # ( ) Finish working on toProteinString
 # ( ) Compare speeds of direct iteration and foldl
 
@@ -245,27 +247,55 @@ end
 # Related problem - http://rosalind.info/problems/orf
 function candidates(dna::DNAString)
 
+  function helper(dna::DNAString)
+    startCodon = "ATG"
+    stopCodons = ["TAG", "TGA", "TAA"]
+
+    bins = [i=>String[] for i=0:2]
+    acc = String[]
+
+    for i=1:length(dna)-2
+      codon = dna.seq[i:i+2]
+      binNum = i % 3
+      if codon == startCodon
+        map!((b) -> string(b, DNACodonTable[codon]), bins[binNum])
+        push!(bins[binNum], DNACodonTable[startCodon])
+      elseif codon in stopCodons
+        append!(acc, bins[binNum])
+        bins[binNum] = String[]
+      else
+        map!((b) -> string(b, DNACodonTable[codon]), bins[binNum])
+        end
+    end
+
+    acc
+  end
+
+  append!(helper(dna), helper(reverseComplement(dna)))
+end
+function candidates2(dna::DNAString)
+
   startCodon = "ATG"
   stopCodons = ["TAG", "TGA", "TAA"]
 
-  bins = [i=>String[] for i=0:2]
-  acc = String[]
+  bins = [Array{String, 1}[] for i=1:3]
+  acc = Array{String, 1}[]
 
   for i=1:length(dna)-2
     codon = dna.seq[i:i+2]
-    binNum = i % 3
+    binNum = 1 + (i % 3)
     if codon == startCodon
-      map!((b) -> string(b, DNACodonTable[codon]), bins[binNum])
-      push!(bins[binNum], DNACodonTable[startCodon])
+      map!((b) -> push!(b, DNACodonTable[codon]), bins[binNum])
+      push!(bins[binNum], [DNACodonTable[startCodon]])
     elseif codon in stopCodons
       append!(acc, bins[binNum])
       bins[binNum] = String[]
     else
-      map!((b) -> string(b, DNACodonTable[codon]), bins[binNum])
+      map!((b) -> push!(b, DNACodonTable[codon]), bins[binNum])
     end
   end
 
-  acc
+  map(join, acc)
 end
 
 function loadText(filename::String)
@@ -284,6 +314,10 @@ function loadRNAString(filename::String)
   RNAString(loadText(filename))
 end
 
+function loadProteinString(filename::String)
+  ProteinString(loadText(filename))
+end
+
 function linesFromFile(filename::String)
 
   raw = open(readlines, filename)
@@ -291,3 +325,4 @@ function linesFromFile(filename::String)
 end
 
 end
+

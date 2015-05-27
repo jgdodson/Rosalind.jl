@@ -5,11 +5,15 @@ import Base.length
 # (✓) Create abstract type for genetic sequence
 # (✓) Add concrete protein sequence type
 # ( ) Finish working on toProteinString
+# ( ) Compare speeds of direct iteration and foldl
 
 const DNAChars = ['A', 'C', 'G', 'T']
+
 const RNAChars = ['A', 'C', 'G', 'U']
+
 const ProteinChars = ['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L',
                       'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y']
+
 const RNACodonTable = ["UUU" => "F", "CUU" => "L", "AUU" => "I",
                        "GUU" => "V", "UUC" => "F", "CUC" => "L",
                        "AUC" => "I", "GUC" => "V", "UUA" => "L",
@@ -33,6 +37,30 @@ const RNACodonTable = ["UUU" => "F", "CUU" => "L", "AUU" => "I",
                        "UGG" => "W", "CGG" => "R", "AGG" => "R",
                        "GGG" => "G"]
 
+const DNACodonTable = ["TTT" => "F", "CTT" => "L", "ATT" => "I",
+                       "GTT" => "V", "TTC" => "F", "CTC" => "L",
+                       "ATC" => "I", "GTC" => "V", "TTA" => "L",
+                       "CTA" => "L", "ATA" => "I", "GTA" => "V",
+                       "TTG" => "L", "CTG" => "L", "ATG" => "M",
+                       "GTG" => "V", "TCT" => "S", "CCT" => "P",
+                       "ACT" => "T", "GCT" => "A", "TCC" => "S",
+                       "CCC" => "P", "ACC" => "T", "GCC" => "A",
+                       "TCA" => "S", "CCA" => "P", "ACA" => "T",
+                       "GCA" => "A", "TCG" => "S", "CCG" => "P",
+                       "ACG" => "T", "GCG" => "A", "TAT" => "Y",
+                       "CAT" => "H", "AAT" => "N", "GAT" => "D",
+                       "TAC" => "Y", "CAC" => "H", "AAC" => "N",
+                       "GAC" => "D", "TAA" => "X", "CAA" => "Q",
+                       "AAA" => "K", "GAA" => "E", "TAG" => "X",
+                       "CAG" => "Q", "AAG" => "K", "GAG" => "E",
+                       "TGT" => "C", "CGT" => "R", "AGT" => "S",
+                       "GGT" => "G", "TGC" => "C", "CGC" => "R",
+                       "AGC" => "S", "GGC" => "G", "TGA" => "X",
+                       "CGA" => "R", "AGA" => "R", "GGA" => "G",
+                       "TGG" => "W", "CGG" => "R", "AGG" => "R",
+                       "GGG" => "G"]
+
+# Superclass of the concrete types in this module.
 abstract GeneticString
 
 immutable DNAString <: GeneticString
@@ -96,6 +124,7 @@ function toDNAString(rna::RNAString)
   DNAString(replace(rna.seq, "U", "T"))
 end
 
+# Related problem - http://rosalind.info/problems/prot
 function toProteinString(rna::RNAString)
 
   res = String[]
@@ -140,7 +169,8 @@ function reverse(rna::RNAString)
   RNAString(reverse(rna.seq))
 end
 
-function gcContent(dna::DNAString)
+# Related problem - http://rosalind.info/problems/gc
+function gcContent(dnaOrRna::Union(DNAString, RNAString))
 
   const GC = ['G', 'C']
 
@@ -152,7 +182,7 @@ function gcContent(dna::DNAString)
     end
   end
 
-  foldl(loop, 0, dna.seq) / length(dna)
+  foldl(loop, 0, dnaOrRna.seq) / length(dnaOrRna)
 end
 
 # Related problem - http://rosalind.info/problems/hamm

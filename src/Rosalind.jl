@@ -1,9 +1,10 @@
 module Rosalind
 
-import Base.length
+import Base: length, reverse
 
 # (✓) Create abstract type for genetic sequence
 # (✓) Add concrete protein sequence type
+# ( ) Finish candidates function
 # ( ) Finish working on toProteinString
 # ( ) Compare speeds of direct iteration and foldl
 
@@ -160,13 +161,17 @@ function length(gen::GeneticString)
   length(gen.seq)
 end
 
-# Related problem - http://rosalind.info/problems/revc
 function reverse(dna::DNAString)
   DNAString(reverse(dna.seq))
 end
 
 function reverse(rna::RNAString)
   RNAString(reverse(rna.seq))
+end
+
+# Related problem - http://rosalind.info/problems/revc
+function reverseComplement(dnaOrRna::Union(DNAString, RNAString))
+  reverse(complement(dnaOrRna))
 end
 
 # Related problem - http://rosalind.info/problems/gc
@@ -207,19 +212,26 @@ function hammingDistance(seq1::GeneticString, seq2::GeneticString)
   foldl(loop, 0, 1:seq1Len)
 end
 
-function findMotif(seq::String, motif::String)
+function findMotif(gen::GeneticString, motif::String)
 
   const seqLen = length(seq)
   const motifLen = length(motif)
 
   seqLen >= motifLen || error("motif length excedes sequence length")
 
-  foldl((acc, i) ->
-    if seq[i:i+motifLen-1] == motif
-      push!(acc, i)
+  function loop(acc::Array{Int64, 1}, index::Int64)
+    if gen.seq[index:index+motifLen-1] == motif
+      push!(acc, index)
     else
       acc
-    end, Int[], 1:seqLen - motifLen + 1)
+    end
+  end
+
+  foldl(loop, Int[], 1:seqLen - motifLen + 1)
+
+end
+
+function candidates(dna::DNAString)
 
 end
 

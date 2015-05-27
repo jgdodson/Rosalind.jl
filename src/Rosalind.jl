@@ -75,9 +75,9 @@ end
 # Frequency counts for the bases in a genetic sequence.
 function countChars(gen::GeneticString)
 
-  alpha = alphabet(gen)
+  const alpha = alphabet(gen)
 
-  indices = [ alpha[i]=>i for i=1:length(alpha) ]
+  const indices = [ alpha[i]=>i for i=1:length(alpha) ]
 
   function loop(counts::Array{Int, 1}, next::Char)
     counts[indices[next]] += 1
@@ -109,7 +109,7 @@ end
 # Related problem - http://rosalind.info/problems/revc
 function complement(dna::DNAString)
 
-  complements = ['A'=>'T',
+  const complements = ['A'=>'T',
                  'C'=>'G',
                  'G'=>'C',
                  'T'=>'A']
@@ -119,7 +119,7 @@ end
 
 function complement(rna::RNAString)
 
-  complements = ['A'=>'U',
+  const complements = ['A'=>'U',
                  'C'=>'G',
                  'G'=>'C',
                  'U'=>'A']
@@ -142,7 +142,7 @@ end
 
 function gcContent(dna::DNAString)
 
-  GC = ['G', 'C']
+  const GC = ['G', 'C']
 
   function loop(count::Int64, base::Char)
     if base in GC
@@ -158,8 +158,8 @@ end
 # Related problem - http://rosalind.info/problems/hamm
 function hammingDistance(seq1::GeneticString, seq2::GeneticString)
 
-  seq1Len = length(seq1)
-  seq2Len = length(seq2)
+  const seq1Len = length(seq1)
+  const seq2Len = length(seq2)
 
   # ensure sequence lengths are equal
   seq1Len == seq2Len ||
@@ -179,8 +179,8 @@ end
 
 function findMotif(seq::String, motif::String)
 
-  seqLen = length(seq)
-  motifLen = length(motif)
+  const seqLen = length(seq)
+  const motifLen = length(motif)
 
   seqLen >= motifLen || error("motif length excedes sequence length")
 

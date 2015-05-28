@@ -273,6 +273,7 @@ function candidates(dna::DNAString)
 
   append!(helper(dna), helper(reverseComplement(dna)))
 end
+
 function candidates2(dna::DNAString)
 
   startCodon = "ATG"
@@ -296,6 +297,37 @@ function candidates2(dna::DNAString)
   end
 
   map(join, acc)
+end
+
+# use Dict{Int, Array{Int, 1}} for accumulator
+# better yet, write it as a generator
+function candidates3(dna::DNAString)
+
+  startCodon::String = "ATG"
+  stopCodons::Array{String, 1} = ["TAG", "TGA", "TAA"]
+
+  bins = [Array{Int, 1}[] for i=1:3]
+  acc = Array{Int, 1}[]
+
+  for i=1:length(dna)-2
+    codon = dna.seq[i:i+2]
+    binNum = 1 + (i % 3)
+    if codon == startCodon
+      for item in bins[binNum]
+        item[2] += 1
+      end
+      push!(bins[binNum], [i, i])
+    elseif codon in stopCodons
+      append!(acc, bins[binNum])
+      bins[binNum] = Array{Int, 1}[]
+    else
+      for item in bins[binNum]
+        item[2] += 1
+      end
+    end
+  end
+
+  acc
 end
 
 function loadText(filename::String)

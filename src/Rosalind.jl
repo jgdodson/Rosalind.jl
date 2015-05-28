@@ -338,6 +338,14 @@ function loadText(filename::String)
   replace(strip(raw), r"\n|\r", "")
 end
 
+function readFastaFile(filename::String)
+
+  fastaPattern = r">([^\s]*) ?([^\n]*)\n([^>]*)"s
+  raw = open(readall, filename)
+
+  map((m) -> m.captures[3], eachmatch(fastaPattern, raw))
+end
+
 function loadDNAString(filename::String)
   DNAString(loadText(filename))
 end

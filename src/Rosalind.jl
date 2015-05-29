@@ -299,12 +299,10 @@ function candidates2(dna::DNAString)
   map(join, acc)
 end
 
-# use Dict{Int, Array{Int, 1}} for accumulator
-# better yet, write it as a generator
 function candidates3(dna::DNAString)
 
-  startCodon::String = "ATG"
-  stopCodons::Array{String, 1} = ["TAG", "TGA", "TAA"]
+  startCodon = "ATG"
+  stopCodons = ["TAG", "TGA", "TAA"]
 
   bins = [Array{Int, 1}[] for i=1:3]
   acc = Array{Int, 1}[]
@@ -330,10 +328,41 @@ function candidates3(dna::DNAString)
   acc
 end
 
+function candidates4(dna::DNAString)
+
+  startCodon = "ATG"
+  stopCodons = ["TAG", "TGA", "TAA"]
+
+  bins = [ i=> Array(Int, 0) for i=0:2]
+  acc = Array(Int, 0)
+
+  for i=1:length(dna)-2
+    codon = dna.seq[i:i+2]
+    binNum = i % 3
+    if codon == startCodon
+      for j in 2:2:length(bins[binNum])
+        bins[binNum][j] += 1
+      end
+      push!(bins[binNum], i, i)
+    elseif codon in stopCodons
+      append!(acc, bins[binNum])
+      bins[binNum] = Array(Int, 0)
+    else
+      for j in 2:2:length(bins[binNum])
+        bins[binNum][j] += 1
+      end
+    end
+  end
+
+  acc
+end
+
 function loadText(filename::String)
 
-  # read text from file
-  raw = open(readall, filename)
+  open(readall, filename)
+end
+
+function cleanText(raw::String)
 
   replace(strip(raw), r"\n|\r", "")
 end
@@ -341,21 +370,21 @@ end
 function readFastaFile(filename::String)
 
   fastaPattern = r">([^\s]*) ?([^\n]*)\n([^>]*)"s
-  raw = open(readall, filename)
+  raw = loadText(filename)
 
-  map((m) -> m.captures[3], eachmatch(fastaPattern, raw))
+  map((m) -> DNAString(cleanText(m.captures[3])), eachmatch(fastaPattern, raw))
 end
 
 function loadDNAString(filename::String)
-  DNAString(loadText(filename))
+  DNAString(cleanText(loadText(filename)))
 end
 
 function loadRNAString(filename::String)
-  RNAString(loadText(filename))
+  RNAString(cleanText(loadText(filename)))
 end
 
 function loadProteinString(filename::String)
-  ProteinString(loadText(filename))
+  ProteinString(cleanText(loadText(filename)))
 end
 
 function linesFromFile(filename::String)

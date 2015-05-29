@@ -328,33 +328,40 @@ function candidates3(dna::DNAString)
   acc
 end
 
-function candidates4(dna::DNAString)
+function candidates(dna::DNAString)
 
-  startCodon = "ATG"
-  stopCodons = ["TAG", "TGA", "TAA"]
+  function helper(dna::DNAString)
 
-  bins = [ i=> Array(Int, 0) for i=0:2]
-  acc = Array(Int, 0)
+    startCodon = "ATG"
+    stopCodons = ["TAG", "TGA", "TAA"]
 
-  for i=1:length(dna)-2
-    codon = dna.seq[i:i+2]
-    binNum = i % 3
-    if codon == startCodon
-      for j in 2:2:length(bins[binNum])
-        bins[binNum][j] += 1
-      end
-      push!(bins[binNum], i, i)
-    elseif codon in stopCodons
-      append!(acc, bins[binNum])
-      bins[binNum] = Array(Int, 0)
-    else
-      for j in 2:2:length(bins[binNum])
-        bins[binNum][j] += 1
+    bins = [ i=> Array(Int, 0) for i=0:2]
+    acc = Array(Int, 0)
+
+    for i=1:length(dna)-2
+      codon = dna.seq[i:i+2]
+      binNum = i % 3
+      if codon == startCodon
+        for j in 2:2:length(bins[binNum])
+          bins[binNum][j] += 1
+        end
+        push!(bins[binNum], i, i)
+      elseif codon in stopCodons
+        append!(acc, bins[binNum])
+        bins[binNum] = Array(Int, 0)
+      else
+        for j in 2:2:length(bins[binNum])
+          bins[binNum][j] += 1
+        end
       end
     end
+
+    acc
   end
 
-  acc
+  indices = append!(helper(dna), helper(reverseComplement(dna)))
+
+  [dna.seq[indices[i]:indices[i+1]] for i=1:2:length(indices)]
 end
 
 function loadText(filename::String)

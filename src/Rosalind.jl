@@ -123,8 +123,17 @@ function toRNAString(dna::DNAString)
   RNAString(replace(dna.seq, "T", "U"))
 end
 
+function toRNAString(rna::RNAString)
+  rna
+end
+
 function toDNAString(rna::RNAString)
   DNAString(replace(rna.seq, "U", "T"))
+end
+
+# Why is having this method a good idea?
+function toDNAString(dna::DNAString)
+  dna
 end
 
 # Related problem - http://rosalind.info/problems/prot

@@ -2,6 +2,7 @@ module Rosalind
 
 import Base.length
 import Base.reverse
+import Base.complement
 
 # (✓) Create abstract type for genetic sequence
 # (✓) Add concrete protein sequence type
@@ -11,13 +12,16 @@ import Base.reverse
 # ( ) Compare speeds of direct iteration and foldl
 
 const DNAChars = ['A', 'C', 'G', 'T']
+const DNABases = Set(DNAChars)
 
 const RNAChars = ['A', 'C', 'G', 'U']
+const RNABases = Set(RNAChars)
 
 const ProteinChars = ['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L',
                       'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y']
+const aminos = Set(ProteinChars)
 
-const RNACodonTable = ["UUU" => "F", "CUU" => "L", "AUU" => "I",
+const RNACodonTable = Dict("UUU" => "F", "CUU" => "L", "AUU" => "I",
                        "GUU" => "V", "UUC" => "F", "CUC" => "L",
                        "AUC" => "I", "GUC" => "V", "UUA" => "L",
                        "CUA" => "L", "AUA" => "I", "GUA" => "V",
@@ -38,9 +42,9 @@ const RNACodonTable = ["UUU" => "F", "CUU" => "L", "AUU" => "I",
                        "AGC" => "S", "GGC" => "G", "UGA" => "X",
                        "CGA" => "R", "AGA" => "R", "GGA" => "G",
                        "UGG" => "W", "CGG" => "R", "AGG" => "R",
-                       "GGG" => "G"]
+                       "GGG" => "G")
 
-const DNACodonTable = ["TTT" => "F", "CTT" => "L", "ATT" => "I",
+const DNACodonTable = Dict("TTT" => "F", "CTT" => "L", "ATT" => "I",
                        "GTT" => "V", "TTC" => "F", "CTC" => "L",
                        "ATC" => "I", "GTC" => "V", "TTA" => "L",
                        "CTA" => "L", "ATA" => "I", "GTA" => "V",
@@ -61,33 +65,30 @@ const DNACodonTable = ["TTT" => "F", "CTT" => "L", "ATT" => "I",
                        "AGC" => "S", "GGC" => "G", "TGA" => "X",
                        "CGA" => "R", "AGA" => "R", "GGA" => "G",
                        "TGG" => "W", "CGG" => "R", "AGG" => "R",
-                       "GGG" => "G"]
+                       "GGG" => "G")
 
 # Superclass of the concrete types in this module.
 abstract GeneticString
 
 immutable DNAString <: GeneticString
-  seq::String
+  seq::AbstractString
 
-  bases = Set(DNAChars)
-  DNAString(seq) = fromAlphabet(bases, seq) ? new(seq) : error("String contains non-ACTG character.")
+  DNAString(seq) = fromAlphabet(DNABases, seq) ? new(seq) : error("String contains non-ACTG character.")
 end
 
 immutable RNAString <: GeneticString
-  seq::String
+  seq::AbstractString
 
-  bases = Set(RNAChars)
-  RNAString(seq) = fromAlphabet(bases, seq) ? new(seq) : error("String contains non-ACGU character.")
+  RNAString(seq) = fromAlphabet(RNABases, seq) ? new(seq) : error("String contains non-ACGU character.")
 end
 
 immutable ProteinString <: GeneticString
-  seq::String
+  seq::AbstractString
 
-  aminos = Set(ProteinChars)
   ProteinString(seq) = fromAlphabet(aminos, seq) ? new(seq) : error("String contains invalid amino acid character")
 end
 
-function fromAlphabet(alphabet::Set{Char}, seq::String)
+function fromAlphabet(alphabet::Set{Char}, seq::AbstractString)
   all(b -> b in alphabet, seq)
 end
 
@@ -161,20 +162,20 @@ end
 # Related problem - http://rosalind.info/problems/revc
 function complement(dna::DNAString)
 
-  const complements = ['A'=>'T',
-                 'C'=>'G',
-                 'G'=>'C',
-                 'T'=>'A']
+  const complements = Dict('A'=>'T',
+                           'C'=>'G',
+                           'G'=>'C',
+                           'T'=>'A')
 
   DNAString(map((ch) -> complements[ch], dna.seq))
 end
 
 function complement(rna::RNAString)
 
-  const complements = ['A'=>'U',
-                 'C'=>'G',
-                 'G'=>'C',
-                 'U'=>'A']
+  const complements = Dict('A'=>'U',
+                           'C'=>'G',
+                           'G'=>'C',
+                           'U'=>'A')
 
   RNAString(map((ch) -> complements[ch], rna.seq))
 end
@@ -192,12 +193,12 @@ function reverse(rna::RNAString)
 end
 
 # Related problem - http://rosalind.info/problems/revc
-function reverseComplement(dnaOrRna::Union(DNAString, RNAString))
+function reverseComplement(dnaOrRna::Union{DNAString, RNAString})
   reverse(complement(dnaOrRna))
 end
 
 # Related problem - http://rosalind.info/problems/gc
-function gcContent(dnaOrRna::Union(DNAString, RNAString))
+function gcContent(dnaOrRna::Union{DNAString, RNAString})
 
   const GC = ['G', 'C']
 
@@ -234,7 +235,7 @@ function hammingDistance(seq1::GeneticString, seq2::GeneticString)
   foldl(loop, 0, 1:seq1Len)
 end
 
-function findMotif(gen::GeneticString, motif::String)
+function findMotif(gen::GeneticString, motif::AbstractString)
 
   const seqLen = length(seq)
   const motifLen = length(motif)
@@ -261,7 +262,7 @@ function candidates(dna::DNAString)
     startCodon = "ATG"
     stopCodons = ["TAG", "TGA", "TAA"]
 
-    bins = [ i=> Array(Int, 0) for i=0:2]
+    bins = [i=> Array(Int, 0) for i=0:2]
     acc = Array(Int, 0)
 
     for i=1:length(dna)-2
@@ -290,17 +291,17 @@ function candidates(dna::DNAString)
   [dna.seq[indices[i]:indices[i+1]] for i=1:2:length(indices)]
 end
 
-function loadText(filename::String)
+function loadText(filename::AbstractString)
 
   open(readall, filename)
 end
 
-function cleanText(raw::String)
+function cleanText(raw::AbstractString)
 
   replace(strip(raw), r"\n|\r", "")
 end
 
-function readFastaFile(filename::String)
+function readFastaFile(filename::AbstractString)
 
   fastaPattern = r">([^\s]*) ?([^\n]*)\n([^>]*)"s
   raw = loadText(filename)
@@ -308,23 +309,22 @@ function readFastaFile(filename::String)
   map((m) -> DNAString(cleanText(m.captures[3])), eachmatch(fastaPattern, raw))
 end
 
-function loadDNAString(filename::String)
+function loadDNAString(filename::AbstractString)
   DNAString(cleanText(loadText(filename)))
 end
 
-function loadRNAString(filename::String)
+function loadRNAString(filename::AbstractString)
   RNAString(cleanText(loadText(filename)))
 end
 
-function loadProteinString(filename::String)
+function loadProteinString(filename::AbstractString)
   ProteinString(cleanText(loadText(filename)))
 end
 
-function linesFromFile(filename::String)
+function linesFromFile(filename::AbstractString)
 
   raw = open(readlines, filename)
   map(strip, raw)
 end
 
 end
-
